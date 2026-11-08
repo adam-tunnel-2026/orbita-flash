@@ -31,6 +31,35 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Extraer y comprobar el proyecto correcto
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "adam-tunnel-2026/orbita-flash"
+          python3 - <<'PY'
+          import pathlib, zipfile
+          source = pathlib.Path('Orbita-Flash-Proyecto.zip')
+          if not source.is_file():
+              raise SystemExit('Falta Orbita-Flash-Proyecto.zip en la raíz. Sube el proyecto, no el ZIP de la APK.')
+          required = {'app/build.gradle', 'app/src/main/AndroidManifest.xml', 'tools/prepare-signing.py', 'signing-certificate.sha256'}
+          with zipfile.ZipFile(source) as archive:
+              names = archive.namelist()
+              if not required.issubset(names):
+                  raise SystemExit('El ZIP no es el proyecto correcto. Un ZIP con una APK no sirve para compilar.')
+              for name in names:
+                  path = pathlib.PurePosixPath(name)
+                  if path.is_absolute() or '..' in path.parts or '\\' in name:
+                      raise SystemExit('El proyecto contiene una ruta no válida.')
+              if len(names) != len(set(names)):
+                  raise SystemExit('El ZIP contiene archivos duplicados.')
+              archive.extractall('proyecto')
+          print('Proyecto correcto. La clave se recuperará del secreto existente.')
+          PY
+      - name: Recuperar la firma permanente
+        working-directory: proyecto
+        env:
+          ORBITA_SIGNING_BUNDLE: ${{ secrets.ORBITA_SIGNING_BUNDLE }}
+        run: python3 tools/prepare-signing.py
       - uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
@@ -38,13 +67,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Extraer proyecto
-        run: python3 -m zipfile -e Orbita-Flash-Proyecto.zip proyecto
-      - name: Recuperar la firma permanente
-        working-directory: proyecto
-        env:
-          ORBITA_SIGNING_BUNDLE: ${{ secrets.ORBITA_SIGNING_BUNDLE }}
-        run: python3 tools/prepare-signing.py
       - name: Comprobar proyecto
         working-directory: proyecto
         run: |
