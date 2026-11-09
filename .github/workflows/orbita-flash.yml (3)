@@ -1,0 +1,277 @@
+name: Orbita Flash - firma permanente
+on:
+  push:
+    paths:
+      - 'Orbita-Flash-Proyecto.zip'
+      - '.github/workflows/orbita-flash.yml'
+  workflow_dispatch:
+    inputs:
+      cleanup_only:
+        description: 'Solo liberar espacio, sin compilar otra APK'
+        type: boolean
+        default: false
+      verify_update:
+        description: 'Probar dos versiones consecutivas en un emulador'
+        type: boolean
+        default: true
+      publish:
+        description: 'Publicar APK y aviso (requiere prueba de actualización)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: orbita-flash-permanent-signature
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Liberar archivos antiguos conservando las APK recientes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import datetime
+          import json
+          import os
+          import urllib.error
+          import urllib.request
+          from collections import defaultdict
+
+          EXPECTED_REPOSITORY = 'adam-tunnel-2026/orbita-flash'
+          KEEP = 3
+
+          def candidates(artifacts):
+              groups = defaultdict(list)
+              seen = set()
+              for item in artifacts:
+                  if item.get('expired'):
+                      continue
+                  ident = item.get('id')
+                  if type(ident) is not int or ident <= 0 or ident in seen:
+                      continue
+                  created = datetime.datetime.fromisoformat(item['created_at'].replace('Z', '+00:00'))
+                  if created.tzinfo is None:
+                      raise ValueError('Artifact date has no timezone')
+                  seen.add(ident)
+                  run = item.get('workflow_run') or {}
+                  groups[(item['name'], run.get('head_branch', ''))].append((created, ident, item))
+              result = []
+              for group in groups.values():
+                  group.sort(key=lambda row: (row[0], row[1]), reverse=True)
+                  result.extend(row[2] for row in group[KEEP:])
+              return result
+
+          def cleanup(api, repository, current_run):
+              if repository != EXPECTED_REPOSITORY:
+                  raise ValueError('Only the Orbita Flash repository is permitted')
+              prefix = '/repos/' + repository
+              artifacts = []
+              page = 1
+              # Complete the inventory before deleting anything; failed pagination is read-only.
+              while True:
+                  data = api('GET', prefix + '/actions/artifacts?per_page=100&page=' + str(page))
+                  rows = data['artifacts']
+                  if not isinstance(rows, list):
+                      raise ValueError('Invalid artifact inventory')
+                  artifacts.extend(rows)
+                  if len(rows) < 100:
+                      break
+                  page += 1
+              old = candidates(artifacts)
+              statuses = {}
+              removed = 0
+              freed = 0
+              for item in old:
+                  run_id = (item.get('workflow_run') or {}).get('id')
+                  if type(run_id) is not int or run_id == current_run:
+                      continue
+                  if run_id not in statuses:
+                      statuses[run_id] = api('GET', prefix + '/actions/runs/' + str(run_id))['status']
+                  if statuses[run_id] != 'completed':
+                      continue
+                  try:
+                      api('DELETE', prefix + '/actions/artifacts/' + str(item['id']))
+                  except urllib.error.HTTPError as error:
+                      if error.code == 404:
+                          continue
+                      raise
+                  removed += 1
+                  freed += item.get('size_in_bytes', 0)
+                  print('Removed old artifact:', item['id'], item['name'])
+              return removed, freed
+
+          def main():
+              repository = os.environ['GITHUB_REPOSITORY']
+              if repository != EXPECTED_REPOSITORY:
+                  raise SystemExit('This cleanup is restricted to Orbita Flash')
+              token = os.environ['GH_TOKEN']
+              def api(method, path):
+                  request = urllib.request.Request('https://api.github.com' + path, method=method, headers={
+                      'Authorization': 'Bearer ' + token,
+                      'Accept': 'application/vnd.github+json',
+                      'X-GitHub-Api-Version': '2026-03-10',
+                  })
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      return None if response.status == 204 else json.load(response)
+              removed, freed = cleanup(api, repository, int(os.environ['GITHUB_RUN_ID']))
+              summary = ('## Limpieza de Orbita Flash\n\n'
+                         f'Archivos antiguos eliminados: **{removed}**.\n\n'
+                         f'Tamano de los archivos eliminados: **{freed / 1048576:.1f} MiB**.\n\n'
+                         'Se conservan al menos los tres mas recientes por nombre y rama. '
+                         'No se modifican Releases, codigo, firmas ni otros repositorios.\n')
+              print(summary)
+              if os.environ.get('GITHUB_STEP_SUMMARY'):
+                  with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as output:
+                      output.write(summary)
+
+          if __name__ == '__main__':
+              main()
+          PY
+  build:
+    needs: cleanup
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.cleanup_only }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Extraer y comprobar el proyecto correcto
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "adam-tunnel-2026/orbita-flash"
+          python3 - <<'PY'
+          import pathlib, zipfile
+          source = pathlib.Path('Orbita-Flash-Proyecto.zip')
+          if not source.is_file():
+              raise SystemExit('Falta Orbita-Flash-Proyecto.zip en la raíz. Sube el proyecto, no el ZIP de la APK.')
+          required = {'app/build.gradle', 'app/src/main/AndroidManifest.xml', 'tools/prepare-signing.py', 'signing-certificate.sha256'}
+          with zipfile.ZipFile(source) as archive:
+              names = archive.namelist()
+              if not required.issubset(names):
+                  raise SystemExit('El ZIP no es el proyecto correcto. Un ZIP con una APK no sirve para compilar.')
+              for name in names:
+                  path = pathlib.PurePosixPath(name)
+                  if path.is_absolute() or '..' in path.parts or '\\' in name:
+                      raise SystemExit('El proyecto contiene una ruta no válida.')
+              if len(names) != len(set(names)):
+                  raise SystemExit('El ZIP contiene archivos duplicados.')
+              archive.extractall('proyecto')
+          print('Proyecto correcto. La clave se recuperará del secreto existente.')
+          PY
+      - name: Recuperar la firma permanente
+        working-directory: proyecto
+        env:
+          ORBITA_SIGNING_BUNDLE: ${{ secrets.ORBITA_SIGNING_BUNDLE }}
+        run: python3 tools/prepare-signing.py
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Comprobar proyecto
+        working-directory: proyecto
+        run: |
+          python3 tests/android-config.test.py
+          node tests/community.test.cjs
+          node tests/i18n.test.cjs
+          mkdir -p /tmp/orbita-jvm
+          javac -d /tmp/orbita-jvm app/src/main/java/es/orbitaflash/game/UpdateRules.java app/src/test/java/es/orbitaflash/game/UpdateRulesTest.java
+          java -cp /tmp/orbita-jvm es.orbitaflash.game.UpdateRulesTest
+      - name: Compilar APK de distribucion con la misma firma
+        working-directory: proyecto
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle --no-daemon :app:assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk ../Orbita-Flash.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs ../Orbita-Flash.apk > "$RUNNER_TEMP/orbita-cert.txt"
+          python3 tools/check-apk-certificate.py "$RUNNER_TEMP/orbita-cert.txt"
+          python3 - <<'PY' > ../release-tag.txt
+          import pathlib,re
+          print('v'+re.search(r"versionName '([^']+)'",pathlib.Path('app/build.gradle').read_text())[1])
+          PY
+          python3 tools/make-update.py ../Orbita-Flash.apk "$(cat ../release-tag.txt)" --aapt "$ANDROID_HOME/build-tools/35.0.0/aapt" --out ../update.json
+      - name: Preparar las dos APK para comprobar actualizacion
+        if: ${{ inputs.verify_update }}
+        working-directory: proyecto
+        shell: bash
+        run: |
+          set -euo pipefail
+          code=$(python3 -c "import re,pathlib; print(re.search(r'versionCode ([0-9]+)',pathlib.Path('app/build.gradle').read_text())[1])")
+          previous_code=$((code - 1))
+          gradle --no-daemon :app:assembleDebug -PorbitaVersionCode="$previous_code"
+          cp app/build/outputs/apk/debug/app-debug.apk ../orbita-update-test-before.apk
+          gradle --no-daemon :app:assembleDebug -PorbitaVersionCode="$code"
+          cp app/build/outputs/apk/debug/app-debug.apk ../orbita-update-test-after.apk
+          for apk in ../orbita-update-test-before.apk ../orbita-update-test-after.apk; do
+            "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$apk" > "$RUNNER_TEMP/orbita-test-cert.txt"
+            python3 tools/check-apk-certificate.py "$RUNNER_TEMP/orbita-test-cert.txt"
+          done
+      - name: Habilitar aceleracion del emulador
+        if: ${{ inputs.verify_update }}
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Probar instalacion encima y conservacion de datos
+        if: ${{ inputs.verify_update }}
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-boot-timeout: 600
+          disable-animations: true
+          script: bash proyecto/tools/test-update-on-device.sh
+      - name: Preparar certificado para la publicacion
+        run: cp proyecto/signing-certificate.sha256 firma-publica.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Orbita-Flash-APK-FIRMADA
+          path: Orbita-Flash.apk
+          retention-days: 3
+          if-no-files-found: error
+      - name: Publicar la version comprobada
+        if: ${{ inputs.publish }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERIFIED_UPDATE: ${{ inputs.verify_update }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$VERIFIED_UPDATE" = "true" || { echo 'Activa verify_update antes de publicar.'; exit 1; }
+          test "$GITHUB_REPOSITORY" = "adam-tunnel-2026/orbita-flash"
+          private=$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)
+          test "$private" = "false" || { echo 'Las descargas deben ser publicas para el actualizador. No se cambia la visibilidad del repositorio automaticamente.'; exit 1; }
+          tag="$(cat release-tag.txt)"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo 'La version ya existe. Incrementa versionCode y versionName antes de publicar otra.'
+            exit 1
+          fi
+          python3 - <<'PY'
+          import pathlib
+          pathlib.Path('release-notes.md').write_text('Órbita Flash con firma permanente. Esta firma nueva no actualiza las APK de prueba antiguas. No desinstales una versión anterior con datos importantes sin preparar primero su migración. Las siguientes versiones de esta nueva serie mantendrán la misma firma.\n')
+          PY
+          gh release create "$tag" Orbita-Flash.apk update.json firma-publica.sha256 --draft --target "$GITHUB_SHA" --title "Órbita Flash $tag" --notes-file release-notes.md
+          gh release edit "$tag" --draft=false --latest
+      - name: Borrar copias temporales privadas
+        if: always()
+        shell: bash
+        run: |
+          rm -f "$RUNNER_TEMP/orbita-signing.p12" orbita-update-test-before.apk orbita-update-test-after.apk
