@@ -1,0 +1,226 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Órbita Flash · Vista previa del carrusel</title><style>
+*{box-sizing:border-box}body{margin:0;background:#090e1e;color:#eff4ff;font:16px system-ui,sans-serif;min-height:100dvh;overscroll-behavior:none;display:grid;place-items:center}main{width:min(100%,480px);padding:20px 18px 12px}header,.stats,.row{display:flex;align-items:center;justify-content:space-between;gap:10px}h1{font-size:27px;letter-spacing:-1px;margin:0}small,.muted{color:#9daac8}button{font:inherit;cursor:pointer;border:1px solid #344260;background:#1c2945;color:white;padding:13px 17px;border-radius:16px;font-weight:700}button:disabled{opacity:.45;cursor:default}.primary{background:#a8ffcf;color:#10312b;border:0}.stats{margin:20px 0 12px}.stats>div{display:grid;gap:2px}.stats strong{font-size:24px}.stats small{font-size:11px;letter-spacing:1px}.game{position:relative;height:clamp(230px,48dvh,440px);background:radial-gradient(ellipse at center,#202e50,#11182d 70%);border:1px solid #303c59;border-radius:30px;overflow:hidden;touch-action:manipulation}canvas{display:block;width:100%;height:100%}.intro{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;background:#0b1125b8;backdrop-filter:blur(5px)}.intro h2{font-size:32px;margin:0 0 12px}.intro p{color:#c0cce3;line-height:1.6;max-width:290px}.intro[hidden],dialog[hidden]{display:none}.switch{width:100%;margin:14px 0 8px;font-size:18px}.hint{text-align:center;font-size:13px;margin:7px 0 16px;color:#9daac8}.banner{text-align:center;padding:12px;border:1px dashed #36425c;border-radius:12px;color:#8996b2;font-size:11px;letter-spacing:.3px}footer{text-align:center;font-size:11px;color:#8491ac;margin-top:10px}dialog{border:1px solid #455577;border-radius:26px;background:#16223c;color:white;padding:26px;width:min(90vw,390px);max-height:88dvh;overflow:auto;text-align:center}dialog::backdrop{background:#030713c9;backdrop-filter:blur(6px)}dialog h2{margin:4px 0 12px;font-size:28px}dialog button{width:100%;margin-top:10px}dialog p{line-height:1.5}.score{font-size:58px;font-weight:850;color:#a8ffcf;line-height:1.1}.tag{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#a8ffcf}.volume{display:flex;align-items:center;gap:5px}input{width:65px;accent-color:#a8ffcf}.row button{padding:8px 12px}.toast{min-height:18px;text-align:center;color:#ffdd84;font-size:12px} @media(max-height:750px){main{padding-top:10px}.stats{margin-top:12px}.game{height:clamp(210px,43dvh,340px)}.hint{margin-bottom:10px}}
+button:focus-visible,input:focus-visible{outline:3px solid #ffdd84;outline-offset:3px}.stats>div{background:#18233d;border:1px solid #344260;border-radius:16px;padding:10px 12px;flex:1}.stats strong{font-variant-numeric:tabular-nums}details{margin-top:16px;background:#141e35;padding:12px;border-radius:14px;font-size:13px}summary{cursor:pointer;color:#c6d3ed}#history{line-height:1.8;color:#b6c6e4}.volume input{width:52px}header small{font-size:10px}.switch{touch-action:manipulation;user-select:none;-webkit-user-select:none}#reason{color:#ffb6cb}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}header{flex-wrap:wrap;gap:14px}header>div:first-child{flex:1;min-width:100px}.volume{gap:6px;flex-shrink:0}.volume button{padding:9px;min-width:44px;min-height:44px;border-radius:13px;touch-action:manipulation}.volume-label{display:grid;font-size:11px;color:#a8b7d4;text-align:center;margin-right:3px}.volume-label strong{color:#eff4ff;font-size:14px}.toast{margin:12px 0 20px;min-height:26px;line-height:1.6;padding:0 10px}.toast:empty{display:none}.banner{margin-top:18px;clear:both}.speed-row{display:flex;align-items:center;gap:12px;margin-top:12px;font-size:12px;color:#b4c7e4}.speed-row progress{width:95px;height:7px;accent-color:#a8ffcf}.hint-pulse{animation:teach 0.8s ease-in-out 3}@keyframes teach{50%{box-shadow:0 0 0 5px #a8ffcf35}}@media(prefers-reduced-motion:reduce){.hint-pulse{animation:none}}/* 0.4: reserve the visible viewport for the controls and board. */
+body{display:block;min-height:100svh}main{margin:0 auto;padding:12px 14px;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}.play{height:calc(100svh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:490px;max-height:920px;display:flex;flex-direction:column;gap:8px}.play>header,.play>.stats,.play>.row,.play>.speed-row,.play>.switch,.play>.hint{flex-shrink:0}.play>header{gap:8px;flex-wrap:nowrap}.play>header>div:first-child{min-width:0}header small{display:none}h1{font-size:clamp(18px,5vw,25px);letter-spacing:-.7px;white-space:nowrap}.volume{gap:4px}.volume-label{font-size:10px}.volume-label strong{font-size:12px}.volume button{min-width:40px;min-height:44px;padding:7px}.stats{margin:0;gap:7px}.stats>div{padding:7px 10px;border-radius:13px}.stats small{font-size:10px;letter-spacing:.5px}.stats strong{font-size:22px}.game{flex:1;min-height:175px;height:auto;border-radius:24px}.play>.row{margin-top:0!important;min-height:44px}.row small{font-size:12px}.row button{min-height:44px}.speed-row{margin-top:0;min-height:18px;font-size:11px}.switch{margin:0;min-height:48px;padding:11px;font-size:16px;border-radius:15px}.hint{margin:0;min-height:18px;font-size:11px;line-height:1.5}.intro h2{font-size:25px}.intro p{font-size:13px;line-height:1.45;margin:10px 0}.intro{padding:10px}.intro .tag{font-size:9px}.intro button{padding:10px 16px}.banner{margin-top:14px}footer{line-height:1.6;color:#a1afc9;padding-bottom:6px}#metrics{margin-bottom:16px}
+@media(max-width:350px){.volume-label{display:none}.volume button{min-width:36px}.play>header{gap:4px}h1{font-size:19px}}
+.community{flex-shrink:0;min-height:82px;max-height:102px;padding:7px 10px;border:1px solid #3b605e;border-radius:12px;background:#162c37;display:flex;flex-direction:column;justify-content:center}.community small{font-size:9px;letter-spacing:.7px;color:#a8ddce}.community strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.community .muted{font-size:10px}.podium-row{display:flex;align-items:center;gap:6px;min-height:18px}.podium-row strong{flex:1;min-width:0;font-size:12px}.podium-row b{flex-shrink:0;font-size:12px;color:#a5ffce}.podium-row[hidden]{display:none}.play{min-height:575px}#cityForm{padding-top:14px;margin-top:14px;border-top:1px solid #405574}#cityForm[hidden]{display:none}#cityForm input{width:100%;font:inherit;color:#fff;background:#0b1529;border:1px solid #7085a8;padding:12px;border-radius:12px;margin-top:8px}#cityForm label{display:block;text-align:left}#cityStatus{font-size:13px;color:#c6e6df;line-height:1.5}#cityForm .muted{font-size:12px}button[hidden]{display:none}
+#result{padding:0;overflow:hidden;max-height:calc(100dvh - 24px);width:min(94vw,390px)}#result[open]{display:flex;flex-direction:column}#result .result-content{padding:20px 22px 12px;min-height:0;overflow-y:auto;overscroll-behavior:contain;flex:1 1 auto}#result .result-actions{flex:0 0 auto;padding:12px 22px 14px;background:#16223c;border-top:1px solid #405574}#result .result-actions button{margin:0;min-height:48px}#result .result-actions p{font-size:10px!important;margin:8px 0 0;line-height:1.3}#result h2{font-size:24px;margin:4px 0 8px}#result .score{font-size:48px}#result .result-content>p{margin:10px 0;font-size:14px}#result .result-content>button{font-size:14px;padding:11px 12px}#result:not([open]){display:none}
+
+.community{min-height:116px;max-height:none;gap:2px}.hour-countdown{font-size:11px;color:#ffdd84;font-variant-numeric:tabular-nums}.community small{font-size:8px}.community .muted{line-height:1.3}#podiumGap:empty{display:none}.play{min-height:610px}.extras{display:flex;margin-top:14px}.extras button{width:100%;min-height:44px}#previousPodium{white-space:pre-line;line-height:1.8}#hourHistory .muted{font-size:11px}#shop{padding:0;overflow:hidden;max-height:calc(100dvh - 24px)}#shop[open]{display:flex;flex-direction:column}#shop:not([open]){display:none}.shop-content{padding:20px;overflow-y:auto;min-height:0}.shop-content>p{font-size:13px}.shop-actions{padding:12px 20px;border-top:1px solid #405574;flex-shrink:0}.shop-actions button{margin:0}.shop-item{display:flex;align-items:center;gap:8px;text-align:left;padding:8px 0;border-top:1px solid #344260;font-size:12px}.shop-item button{width:auto;min-width:86px;margin:0 0 0 auto;padding:10px;font-size:12px}.swatch{width:20px;height:20px;border-radius:50%;flex-shrink:0;background:var(--swatch)}.mint{--swatch:#a8ffcf}.blue{--swatch:#70c8ff}.gold{--swatch:#ffdd84}.violet{--swatch:#c7a0ff}.trail-swatch{width:28px;height:7px;border-radius:10px;background:linear-gradient(90deg,transparent,var(--swatch));flex-shrink:0}#shopStatus{min-height:20px;color:#ffdd84}
+
+/* 0.8.1: distinguish completed-hour winners from the live green podium. */
+#hourHistory{margin-top:18px;padding:0;border:2px solid #e7bd62;border-radius:18px;background:#1b2440;box-shadow:0 5px 20px #0003;overflow:hidden}
+#hourHistory>summary{display:flex;align-items:center;gap:10px;min-height:64px;padding:16px 14px;color:#ffe3a0;background:#30314a;font-size:15px;font-weight:800;line-height:1.4;list-style:none;cursor:pointer}
+#hourHistory>summary::-webkit-details-marker{display:none}
+#hourHistory>summary::before{content:'🏆';font-size:23px;flex-shrink:0}
+#hourHistory>summary::after{content:'▾';margin-left:auto;color:#ffe3a0;flex-shrink:0}
+#hourHistory[open]>summary::after{content:'▴'}
+#hourHistory>summary:focus-visible{outline:3px solid #fff;outline-offset:-4px}
+#previousPodium{margin:0;padding:18px 16px;color:#fff4d7;font-size:16px;font-weight:700;line-height:1.8;white-space:pre-line;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+#hourHistory>.muted{margin:0;padding:0 16px 18px;color:#c9d5ee;font-size:12px;line-height:1.6}
+@media(max-width:350px){#hourHistory>summary{font-size:13px;padding:14px 12px;gap:8px}#previousPodium{font-size:14px}}
+
+/* Compact opaque ring. Rear faces never reveal text through the front. */
+#hourHistory{position:relative;background:#1b2440}
+#hourHistory>summary{background:transparent;min-height:42px;padding:10px 42px 6px 12px;font-size:14px;gap:8px}
+#hourHistory>summary::before{font-size:21px}
+#hourHistory>summary::after{display:none}
+#hourHistory .podium-carousel{padding:0 6px 3px}
+#hourHistory [hidden]{display:none!important}
+.podium-ring{position:relative}.podium-fireworks{position:absolute;inset:0;width:100%;height:108px;pointer-events:none;z-index:300}.podium-stage{position:relative;height:108px;overflow:hidden;touch-action:pan-y;isolation:isolate}
+.podium-card{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;background:transparent;border:0;padding:0;margin:0}
+.podium-card text{font-family:Arial,sans-serif;white-space:pre}
+.podium-card .podium-date{display:none}
+.podium-card[data-front="false"] .podium-score,.podium-card[data-front="false"] .podium-medal{visibility:hidden}
+.podium-card[data-rear="true"] text,.podium-card[data-rear="true"] .podium-medal{visibility:hidden}
+.podium-card[data-blank="true"] text,.podium-card[data-blank="true"] .podium-medal{visibility:hidden}
+.podium-controls{position:relative;display:flex;align-items:center;justify-content:center;height:44px;margin:0}
+.podium-controls button{background:transparent;border:0;box-shadow:none;border-radius:8px;min-width:44px;min-height:44px;padding:0;color:#acbcd7;font-weight:400;font-size:20px}
+.podium-controls #podiumRotation{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:1;min-width:0;max-width:270px;min-height:44px;font-size:10px}
+.podium-controls svg{display:block;width:76px;height:13px;color:#a8ffcf;flex-shrink:0}
+.podium-controls button:disabled{opacity:.35}
+#podiumPosition{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;margin:0}
+#hourHistory .podium-list{padding:0;margin:0;background:transparent}
+#hourHistory .podium-list>summary{position:absolute;right:0;top:0;display:flex;align-items:center;justify-content:center;width:40px;height:44px;list-style:none;font-size:0;color:#c9d5ee}
+#hourHistory .podium-list>summary::-webkit-details-marker{display:none}
+#hourHistory .podium-list>summary::before{content:'☷';font-size:21px}
+#hourHistory .podium-list>summary:focus-visible{outline:2px solid #fff;outline-offset:-4px}
+#hourHistory #previousPodium{font-size:13px;padding:10px 14px;line-height:1.7}
+#hourHistory>.muted{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
+@media(max-width:350px){#hourHistory>summary{font-size:12px;gap:6px}}
+</style><style>body{min-height:100vh}main{padding-top:28px}h1{font-size:22px}.preview-note{font-size:13px;color:#9daac8;line-height:1.5;margin:10px 0 22px}.extras{margin-bottom:16px}</style></head><body><main><h1>Órbita Flash<span style="color:#a8ffcf">.</span></h1><p class="preview-note">Vista previa funcional · Datos de ejemplo.<br>Este archivo usa el mismo código del carrusel del proyecto 0.9.7.</p><div class="extras"><button>Bolas y estelas · Tienda</button></div><details id="hourHistory" open><summary><span data-i18n="Podios de las últimas 24 horas">Podios de las últimas 24 horas</span></summary><div id="podiumCarousel" class="podium-carousel" hidden>
+<div class="podium-ring"><div id="podiumStage" class="podium-stage" role="group" aria-label="Podios giratorios" data-i18n-aria-label="Podios giratorios"></div><svg id="podiumFireworks" class="podium-fireworks" viewBox="0 0 640 164" aria-hidden="true" style="display:none"></svg></div>
+<div class="podium-controls"><button id="podiumBack" aria-label="Podio anterior" data-i18n-aria-label="Podio anterior">‹</button><button id="podiumRotation" aria-pressed="false"><svg viewBox="0 0 100 18" aria-hidden="true"><path d="M4 5 Q48 23 93 5 M83 2 L94 5 L87 13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="podiumRotationText" data-i18n="Giro automático · Toca para pausar">Giro automático · Toca para pausar</span></button><button id="podiumNext" aria-label="Podio siguiente" data-i18n-aria-label="Podio siguiente">›</button></div>
+<p id="podiumPosition"></p></div>
+<details class="podium-list" id="podiumList"><summary><span data-i18n="Ver lista de podios">Ver lista de podios</span></summary><p id="previousPodium"><span data-i18n="Conecta para consultar el resultado.">Conecta para consultar el resultado.</span></p></details><p class="muted"><span data-i18n="Los tres primeros de cada hora permanecen aquí durante 24 horas desde el cierre.">Los tres primeros de cada hora permanecen aquí durante 24 horas desde el cierre.</span></p></details><p class="preview-note">La mejor marca celebra con fuegos artificiales sin sonido cada vez que llega al centro. Toca el anillo para pausar. Desliza a los lados para cambiar de pueblo. El icono ☷ abre la lista completa.</p></main><script>
+const $=id=>document.getElementById(id),LANGUAGE='es';
+const tr=(s,values={})=>s.replace(/\{(\w+)\}/g,(all,key)=>Object.prototype.hasOwnProperty.call(values,key)?String(values[key]):all);
+function hourLabel(n){return new Date(n).toLocaleTimeString(LANGUAGE,{hour:'2-digit',minute:'2-digit'})}
+function podiumRingGeometry(relative){
+ const tau=2*Math.PI,backStart=Math.PI/2+.06,backEnd=tau-backStart,step=(backEnd-backStart)/5,gap=.018;
+ const ranges=[[-.52,.52],[.56,1.32]];
+ for(let i=0;i<5;i++)ranges.push([backStart+i*step+gap,backStart+(i+1)*step-gap]);
+ ranges.push([tau-1.32,tau-.56]);
+ const k=Math.floor(relative),fraction=relative-k;
+ const range=n=>ranges[((n%8)+8)%8].map(t=>t+Math.floor(n/8)*tau);
+ const from=range(k),to=range(k+1),a=from[0]+(to[0]-from[0])*fraction,b=from[1]+(to[1]-from[1])*fraction;
+ const point=t=>({x:320+294*Math.sin(t),y:34+28*Math.cos(t)}),height=80,corner=7,epsilon=Math.min((b-a)/8,.055);
+ const number=n=>Number(n.toFixed(3)),xy=(p,dy=0)=>number(p.x)+' '+number(p.y+dy);
+ const left=point(a),right=point(b),start=point(a+epsilon),finish=point(b-epsilon);
+ let path='M '+xy(start);
+ const points=[];
+ for(let i=0;i<=24;i++){const t=a+epsilon+(b-a-2*epsilon)*i/24,p=point(t);points.push(p);if(i)path+=' L '+xy(p)}
+ path+=' Q '+xy(right)+' '+xy(right,corner)+' L '+xy(right,height-corner)+' Q '+xy(right,height)+' '+xy(finish,height);
+ for(let i=23;i>=0;i--)path+=' L '+xy(points[i],height);
+ path+=' Q '+xy(left,height)+' '+xy(left,height-corner)+' L '+xy(left,corner)+' Q '+xy(left)+' '+xy(start)+' Z';
+ const xs=[left.x,right.x,...points.map(p=>p.x)],ys=[left.y,right.y,...points.map(p=>p.y)],mid=(a+b)/2;
+ return {path,cx:(Math.min(...xs)+Math.max(...xs))/2,cy:point(mid).y,width:Math.max(...xs)-Math.min(...xs),depth:Math.cos(mid),bounds:{left:Math.min(...xs),right:Math.max(...xs),top:Math.min(...ys),bottom:Math.max(...ys)+height}};
+}
+function podiumRingFit(value,width,size){
+ const chars=Array.from(value),measure=text=>Array.from(text).reduce((n,ch)=>n+(/[ilIjtfr .’'·]/u.test(ch)?.30:/[MWmw]/u.test(ch)?.85:.58)*size,0);
+ if(measure(value)<=width)return {text:value,width:measure(value)};
+ while(chars.length&&measure(chars.join('')+'…')>width)chars.pop();
+ const text=chars.join('')+'…';return {text,width:measure(text)};
+}
+function podiumRingDrawing(item,relative){
+ const g=podiumRingGeometry(relative),front=Math.abs(relative)<.30,rear=Math.abs(relative)>1.35,size=front?26:22;
+ const fitted=podiumRingFit(item.city,Math.max(16,g.width-(front?60:12)),size);
+ const total=fitted.width+(front?34:0),start=g.cx-total/2;
+ return {...g,front,rear,size,title:fitted.text,titleX:front?start+34:g.cx,titleY:g.cy+(front?30:47),anchor:front?'start':'middle',medalX:start+12,medalY:g.cy+21,scoreY:g.cy+58};
+}
+// Four small, silent bursts stay outside the central name and score area.
+function podiumFireworkDrawing(age){
+ const colors=['#ffdd84','#a8ffcf','#ffb979'],bursts=[{x:92,y:57,start:0,radius:26},{x:548,y:57,start:.15,radius:26},{x:245,y:20,start:.5,radius:16},{x:395,y:20,start:.65,radius:16}],particles=[];
+ for(let b=0;b<bursts.length;b++){
+  const burst=bursts[b],t=age-burst.start,active=t>=0&&t<1;
+  const progress=Math.max(0,Math.min(1,t)),radius=4+burst.radius*progress,opacity=active?(1-progress)**1.4:0;
+  for(let i=0;i<10;i++){
+   const angle=i*Math.PI/5+b*.25,dx=Math.cos(angle),dy=Math.sin(angle),fall=progress*progress*8;
+   particles.push({x1:burst.x+dx*radius*.65,y1:burst.y+dy*radius*.65+fall,x2:burst.x+dx*radius,y2:burst.y+dy*radius+fall,opacity,color:colors[(i+b)%colors.length]});
+  }
+ }
+ return {particles,halo:age>=0&&age<2?.55*(1-age/2):0};
+}
+const podiumCarousel=(()=>{
+ const stage=$('podiumStage'),container=$('podiumCarousel'),rotation=$('podiumRotation'),effects=$('podiumFireworks');
+ const motion=window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):null;
+ let items=[],cards=[],signature='',position=0,paused=!!motion?.matches,visible=false,lastTime=0,lastPaint=0,cycle=0,origin=0;
+ const wrap=(n,len=items.length)=>((n%len)+len)%len;
+ let bestScore=0,lastArrival=null,effectAge=2;
+ const svg=tag=>document.createElementNS('http://www.w3.org/2000/svg',tag),halo=svg('path'),sparks=[];
+ halo.setAttribute('d',podiumRingGeometry(0).path);halo.setAttribute('fill','none');halo.setAttribute('stroke','#ffe39a');halo.setAttribute('stroke-width','8');halo.setAttribute('stroke-linejoin','round');
+ effects.append(halo);
+ for(let i=0;i<40;i++){const line=svg('line');line.setAttribute('stroke-width','2.6');line.setAttribute('stroke-linecap','round');effects.append(line);sparks.push(line)}
+ function stopCelebration(){effectAge=2;effects.style.display='none'}
+ function drawCelebration(){
+  if(effectAge>=2){effects.style.display='none';return}
+  effects.style.display='';const drawing=podiumFireworkDrawing(effectAge);
+  halo.setAttribute('stroke-opacity',String(motion?.matches ? .45 : drawing.halo));
+  sparks.forEach((line,i)=>{const p=drawing.particles[i];for(const key of ['x1','y1','x2','y2'])line.setAttribute(key,String(p[key]));line.setAttribute('stroke',p.color);line.setAttribute('stroke-opacity',String(motion?.matches?0:p.opacity))});
+ }
+ function syncCelebration(){
+  if(!items.length){lastArrival=null;stopCelebration();return}
+  const centred=Math.abs(position-Math.round(position))<.001;
+  if(!centred){lastArrival=null;stopCelebration();return}
+  const item=items[wrap(Math.round(position))],eligible=item.score===bestScore;
+  const arrival=item.key+':'+item.score+':'+eligible;
+  if(lastArrival===arrival)return;
+  lastArrival=arrival;stopCelebration();
+  if(eligible&&visible&&$('hourHistory').open&&!document.hidden){effectAge=0;drawCelebration()}
+  // Offscreen arrivals are deferred until the winner is actually visible.
+  else if(eligible)lastArrival=null;
+ }
+
+ function current(){return items[wrap(Math.round(position))]}
+ function controls(){
+  const single=items.length<2;
+  $('podiumBack').disabled=single;$('podiumNext').disabled=single;rotation.disabled=single;
+  $('podiumRotationText').textContent=paused?tr('Giro en pausa · Toca para continuar'):tr('Giro automático · Toca para pausar');
+  rotation.setAttribute('aria-pressed',String(paused));
+ }
+ function label(card,item){
+  if(card.key===item.key)return;card.key=item.key;
+  card.name.textContent=['🥇','🥈','🥉'][item.rank]+' '+item.city;
+  card.score.textContent=item.score+tr(' puntos')+' · '+hourLabel(item.roundStart)+'–'+hourLabel(item.roundEnd);
+  card.date.textContent=new Date(item.roundStart).toLocaleDateString(LANGUAGE);
+ }
+ function paint(){
+  if(!items.length){syncCelebration();return}
+  const base=Math.floor(position),fraction=position-base;
+  cards.forEach((card,i)=>{
+   const slot=i-3,relative=slot-fraction,index=wrap(base+slot),item=items[index],p=podiumRingDrawing(item,relative);
+   label(card,item);
+   card.name.textContent=p.title;
+   for(const [key,value] of Object.entries({x:p.titleX,y:p.titleY,'font-size':p.size,'font-weight':p.front?700:500,'text-anchor':p.anchor,fill:p.front?'#fff0c4':'#edf2ff'}))card.name.setAttribute(key,String(value));
+   card.score.setAttribute('x',String(p.cx));card.score.setAttribute('y',String(p.scoreY));
+   card.face.setAttribute('d',p.path);card.face.setAttribute('fill',p.rear?'#263149':'#1b2741');card.face.setAttribute('stroke',p.rear?'#4d5874':'#dbc183');
+   card.medal.setAttribute('transform','translate('+p.medalX+' '+p.medalY+')');
+   const color=['#edc25e','#c3cede','#c8916a'][item.rank];card.disc.setAttribute('fill',color);card.rank.textContent=String(item.rank+1);
+   card.node.style.opacity='1';card.node.dataset.rear=String(p.rear);card.node.dataset.front=String(p.front);card.node.dataset.blank=String(items.length===1&&!p.front);
+   card.node.style.zIndex=String(Math.round((p.depth+1)*100));
+  });
+  const front=wrap(Math.round(position)),item=items[front];
+  $('podiumPosition').textContent=tr('{n} de {total}',{n:front+1,total:items.length})+' · '+item.city;
+  if(item.score===bestScore)$('podiumPosition').textContent+=' · '+tr('Mejor marca de las últimas 24 horas');
+  syncCelebration();
+ }
+ function setItems(hours){
+  const next=hours.flatMap(h=>h.towns.map((t,rank)=>({...t,rank,roundStart:h.roundStart,roundEnd:h.roundEnd,key:h.roundStart+':'+rank+':'+t.city})));
+  const nextSignature=JSON.stringify(next);
+  if(nextSignature===signature)return;
+  const selected=current();signature=nextSignature;items=next;bestScore=items.length?Math.max(...items.map(t=>t.score)):0;
+  position=Math.max(0,items.findIndex(t=>t.key===selected?.key));
+  container.hidden=!items.length;
+  stage.replaceChildren();cards=[];
+  for(let i=0;i<(items.length?8:0);i++){
+   const svg=tag=>document.createElementNS('http://www.w3.org/2000/svg',tag);
+   const node=svg('svg'),face=svg('path'),name=svg('text'),score=svg('text'),date=svg('text'),medal=svg('g'),ribbons=svg('path'),disc=svg('circle'),rank=svg('text');
+   node.setAttribute('class','podium-card');node.setAttribute('viewBox','0 0 640 164');node.setAttribute('aria-hidden','true');
+   face.setAttribute('stroke-width','1.6');name.setAttribute('font-family','Arial, sans-serif');
+   score.setAttribute('class','podium-score');score.setAttribute('font-size','20');score.setAttribute('fill','#c1cee6');score.setAttribute('text-anchor','middle');
+   date.setAttribute('class','podium-date');medal.setAttribute('class','podium-medal');
+   ribbons.setAttribute('d','M-8 5 L-10 23 L0 17 L10 23 L8 5 Z');ribbons.setAttribute('fill','#cba45b');
+   disc.setAttribute('r','11');disc.setAttribute('stroke','#ffe5a0');disc.setAttribute('stroke-width','1.5');
+   rank.setAttribute('y','4');rank.setAttribute('text-anchor','middle');rank.setAttribute('font-size','13');rank.setAttribute('font-weight','700');rank.setAttribute('fill','#493917');
+   medal.append(ribbons,disc,rank);node.append(face,name,score,date,medal);stage.append(node);cards.push({node,face,name,score,date,medal,disc,rank,key:null});
+  }
+  origin=position;cycle=0;controls();paint();lastTime=0;
+ }
+ function move(delta){if(items.length<2)return;paused=true;position=wrap(Math.round(position)+delta);origin=position;cycle=0;controls();paint()}
+ function toggle(){paused=!paused;if(items.length){position=wrap(Math.round(position));origin=position;cycle=0}controls();paint()}
+ rotation.onclick=toggle;
+ $('podiumBack').onclick=()=>move(-1);$('podiumNext').onclick=()=>move(1);
+ // A tap freezes rotation. Vertical movement remains ordinary page scrolling.
+ let touch=null;
+ stage.onpointerdown=e=>{touch={x:e.clientX,y:e.clientY}};
+ stage.onpointercancel=()=>{touch=null};
+ stage.onpointerup=e=>{if(!touch)return;const dx=e.clientX-touch.x,dy=e.clientY-touch.y;touch=null;if(Math.abs(dy)>24&&Math.abs(dy)>Math.abs(dx))return;if(Math.abs(dx)>24)move(dx<0?1:-1);else toggle()};
+ container.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();move(e.key==='ArrowRight'?1:-1)}});
+ if(window.IntersectionObserver){const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;lastTime=0});observer.observe(stage)}else visible=true;
+ if(motion?.addEventListener)motion.addEventListener('change',()=>{if(motion.matches&&!paused)toggle()});
+ if(window.ResizeObserver)new ResizeObserver(paint).observe(stage);
+ function frame(time){
+  const elapsed=lastTime?Math.min((time-lastTime)/1000,.05):0;lastTime=time;
+  if(!items.length||!visible||!$('hourHistory').open||document.hidden){lastArrival=null;stopCelebration();return}
+  syncCelebration();
+  if(effectAge<2){effectAge+=elapsed;drawCelebration()}
+  const focused=container.contains(document.activeElement)&&document.activeElement!==rotation;
+  if(paused||focused||items.length<2)return;
+  // Rest at the centre for four seconds, then turn smoothly to the next town.
+  // This keeps one readable main label instead of leaving two large faces in front.
+  cycle+=elapsed;
+  if(cycle<=4)return;
+  const progress=Math.min(1,(cycle-4)/1.2),ease=progress*progress*(3-2*progress);
+  position=wrap(origin+ease);
+  if(progress===1){position=wrap(origin+1);origin=position;cycle=0}
+  if(time-lastPaint>33||progress===1){paint();lastPaint=time}
+ }
+ return {setItems,frame};
+})();
+
+const h=new Date(2026,10,8,12).getTime(),HOUR=3600000;
+const samples=[{roundStart:h,roundEnd:h+HOUR,towns:[{city:'Azpeitiarra',score:191},{city:'Gipuzkoa',score:176},{city:'Salamanca',score:187}]}];
+podiumCarousel.setItems(samples);
+$('previousPodium').textContent=samples.map(h=>hourLabel(h.roundStart)+'–'+hourLabel(h.roundEnd)+' · '+new Date(h.roundStart).toLocaleDateString(LANGUAGE)+'\n'+h.towns.map((t,i)=>(i+1)+'. '+t.city+' · '+t.score+' puntos').join('\n')).join('\n\n');
+function animate(t){podiumCarousel.frame(t);requestAnimationFrame(animate)}requestAnimationFrame(animate);
+</script></body></html>
